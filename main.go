@@ -12,6 +12,9 @@ func main() {
 		Addr:		":8080",
 		Handler:	mux,
 	}
+	// add basic handler at a root
+	mux.Handle("/", http.FileServer(http.Dir(".")))
+
 	// start the server
 	serv.ListenAndServe()
 }
