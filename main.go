@@ -13,8 +13,17 @@ func main() {
 		Handler:	mux,
 	}
 	// add basic handler at a root
-	mux.Handle("/", http.FileServer(http.Dir(".")))
+	mux.Handle("/app/", http.StripPrefix("/app/", http.FileServer(http.Dir("."))))
+	// add readiness endpoint handler
 
+	mux.HandleFunc("/healthz", handleReadinessEndpoint)
 	// start the server
 	serv.ListenAndServe()
+}
+
+// handler function for readiness endpoint
+func handleReadinessEndpoint(rw http.ResponseWriter, req *http.Request) {
+	rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	rw.WriteHeader(200)
+	rw.Write([]byte("OK"))
 }
