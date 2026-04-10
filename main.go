@@ -24,7 +24,9 @@ func main() {
 	mux.Handle("/app/", http.StripPrefix("/app/", apiConf.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
 	// readiness endpoint handler
 	mux.HandleFunc("/healthz", handleReadinessEndpoint)
+
 	mux.HandleFunc("/metrics", apiConf.handleMetricsEndpoint)
+	mux.HandleFunc("/reset", apiConf.handleResetEndpoint)
 	// start the server
 	serv.ListenAndServe()
 }
@@ -36,6 +38,8 @@ func handleReadinessEndpoint(rw http.ResponseWriter, req *http.Request) {
 	rw.Write([]byte("OK"))
 }
 
+
+// ======== METHODS for apiConfig ========
 // handler method for metrics
 func (cfg *apiConfig) handleMetricsEndpoint(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -43,6 +47,13 @@ func (cfg *apiConfig) handleMetricsEndpoint(rw http.ResponseWriter, req *http.Re
 	outString := fmt.Sprintf("Hits: %d" , cfg.fileserverHits.Load())
 	rw.Write([]byte(outString))
 } 
+
+// handler method for reseting metrics
+func (cfg *apiConfig) handleResetEndpoint(rw http.ResponseWriter, req *http.Request) {
+	rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	rw.WriteHeader(200)
+	cfg.fileserverHits.Store(0)
+}
 
 // middleware method for counting requests
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
