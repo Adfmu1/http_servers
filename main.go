@@ -14,11 +14,11 @@ func main() {
 	// create a multiplexer for a server
 	mux := http.NewServeMux()
 	// create server that uses created mux
-	serv := http.Server{
+	serv := &http.Server{
 		Addr:		":8080",
 		Handler:	mux,
 	}
-	apiConf := apiConfig{}
+	apiConf := &apiConfig{}
 	// add basic handler at a root
 	mux.Handle("/app/", http.StripPrefix("/app/", apiConf.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
 	// readiness endpoint handler
