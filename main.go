@@ -23,9 +23,10 @@ func main() {
 	// add basic handler at a root
 	mux.Handle("/app/", http.StripPrefix("/app/", apiConf.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
 	// readiness endpoint handler
-	mux.HandleFunc("GET /healthz", handleReadinessEndpoint)
-	mux.HandleFunc("GET /metrics", apiConf.handleMetricsEndpoint)
-	mux.HandleFunc("POST /reset", apiConf.handleResetEndpoint)
+	mux.HandleFunc("GET /api/healthz", handleReadinessEndpoint)
+
+	mux.HandleFunc("GET /api/metrics", apiConf.handleMetricsEndpoint)
+	mux.HandleFunc("POST /api/reset", apiConf.handleResetEndpoint)
 	// start the server
 	serv.ListenAndServe()
 }
