@@ -26,7 +26,7 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", handleReadinessEndpoint)
 
 	mux.HandleFunc("GET /admin/metrics", apiConf.handleMetricsEndpoint)
-	mux.HandleFunc("POST /api/reset", apiConf.handleResetEndpoint)
+	mux.HandleFunc("POST /admin/reset", apiConf.handleResetEndpoint)
 	// start the server
 	serv.ListenAndServe()
 }
