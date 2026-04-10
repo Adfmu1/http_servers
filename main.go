@@ -25,7 +25,7 @@ func main() {
 	// readiness endpoint handler
 	mux.HandleFunc("GET /api/healthz", handleReadinessEndpoint)
 
-	mux.HandleFunc("GET /api/metrics", apiConf.handleMetricsEndpoint)
+	mux.HandleFunc("GET /admin/metrics", apiConf.handleMetricsEndpoint)
 	mux.HandleFunc("POST /api/reset", apiConf.handleResetEndpoint)
 	// start the server
 	serv.ListenAndServe()
@@ -42,10 +42,15 @@ func handleReadinessEndpoint(rw http.ResponseWriter, req *http.Request) {
 // ======== METHODS for apiConfig ========
 // handler method for metrics
 func (cfg *apiConfig) handleMetricsEndpoint(rw http.ResponseWriter, req *http.Request) {
-	rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	rw.Header().Set("Content-Type", "text/html")
 	rw.WriteHeader(200)
-	outString := fmt.Sprintf("Hits: %d" , cfg.fileserverHits.Load())
-	rw.Write([]byte(outString))
+	adminPageContent := fmt.Sprintf(`<html>
+	  <body>
+	    <h1>Welcome, Chirpy Admin</h1>
+	    <p>Chirpy has been visited %d times!</p>
+	  </body>
+	</html>`, cfg.fileserverHits.Load())
+	rw.Write([]byte(adminPageContent))
 } 
 
 // handler method for reseting metrics
