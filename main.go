@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"sync/atomic"
+	"fmt"
 )
 
 // struct to hold number of requests to the server
@@ -23,6 +24,7 @@ func main() {
 	mux.Handle("/app/", http.StripPrefix("/app/", apiConf.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
 	// readiness endpoint handler
 	mux.HandleFunc("/healthz", handleReadinessEndpoint)
+	mux.HandleFunc("/metrics", apiConf.handleMetricsEndpoint)
 	// start the server
 	serv.ListenAndServe()
 }
@@ -33,6 +35,14 @@ func handleReadinessEndpoint(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(200)
 	rw.Write([]byte("OK"))
 }
+
+// handler method for metrics
+func (cfg *apiConfig) handleMetricsEndpoint(rw http.ResponseWriter, req *http.Request) {
+	rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	rw.WriteHeader(200)
+	outString := fmt.Sprintf("Hits: %d" , cfg.fileserverHits.Load())
+	rw.Write([]byte(outString))
+} 
 
 // middleware method for counting requests
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
