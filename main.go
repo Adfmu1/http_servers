@@ -3,8 +3,10 @@ package main
 import (
 	"net/http"
 	"sync/atomic"
+	"encoding/json"
 	"fmt"
 )
+
 
 // struct to hold number of requests to the server
 type apiConfig struct {
@@ -24,6 +26,7 @@ func main() {
 	mux.Handle("/app/", http.StripPrefix("/app/", apiConf.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
 	// readiness endpoint handler
 	mux.HandleFunc("GET /api/healthz", handleReadinessEndpoint)
+	mux.HandleFunc("POST /api/validate_chirp", handlePostChirps)
 
 	mux.HandleFunc("GET /admin/metrics", apiConf.handleMetricsEndpoint)
 	mux.HandleFunc("POST /admin/reset", apiConf.handleResetEndpoint)
@@ -38,6 +41,38 @@ func handleReadinessEndpoint(rw http.ResponseWriter, req *http.Request) {
 	rw.Write([]byte("OK"))
 }
 
+// handler for accepting Chirps
+func handlePostChirps(rw http.ResponseWriter, req *http.Request) {
+	// decode the data from request
+	type parameters struct {
+		Body	string	`json:"body"`
+	}
+	decoder := json.NewDecoder(req.Body)
+	params := parameters{}
+	err := decoder.Decode(&params)
+
+	// ======== CHECK REQUEST DATA ========
+	// any error occurs
+	if err != nil {
+		const errMsg = "Something went wrong"
+		respondWithError(rw, 500, errMsg)
+		return
+	}
+	// length of chirp too long
+	if len(params.Body) > 140 {
+		const errMsg = "Chirp is too long"
+		respondWithError(rw, 400, errMsg)
+		return
+	}
+	// response ok
+	type response struct {
+		Body	bool	`json:"valid"`
+	}
+	resp := response{
+		Body:	true,
+	}
+	respondWithJson(rw, 200, resp)
+}
 
 // ======== METHODS for apiConfig ========
 // handler method for metrics
@@ -67,3 +102,29 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// ======== HELPER FUNCTIONS =========
+func respondWithError(rw http.ResponseWriter, code int, msg string) {
+	type errorStruct struct {
+		ErrMsg	string	`json:"error"`
+	}
+	errDat := errorStruct{
+		ErrMsg:	msg,
+	}
+	respondWithJson(rw, code, errDat)
+}
+
+func respondWithJson(rw http.ResponseWriter, code int, payload interface{}) {
+	data, err := json.Marshal(payload)
+	// any error occurs
+	if err != nil {
+		const errMsg = "Something went wrong"
+		respondWithError(rw, 500, errMsg)
+		return
+	}
+	
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(code)
+	rw.Write(data)
+}
+
