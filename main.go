@@ -5,17 +5,27 @@ import _ "github.com/lib/pq"
 import (
 	"github.com/joho/godotenv"
 	"github.com/Adfmu1/http_servers/internal/database"
+	"sync/atomic"
 	"database/sql"
 	"net/http"
 	"os"
+	"fmt"
 )
 
+type apiConfig struct {
+	fileserverHits atomic.Int32
+	Database	   *database.Queries
+}
 
 func main() {
 	godotenv.Load()
 	// import db
 	dbURL := os.Getenv("DB_URL")
 	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		fmt.Println("an error occured while opening database")
+		return
+	}
 	dbQueries := database.New(db)
 
 	// create a multiplexer for a server
@@ -26,6 +36,7 @@ func main() {
 		Handler:	mux,
 	}
 	apiConf := &apiConfig{}
+	apiConf.Database = dbQueries
 	// add basic handler at a root
 	mux.Handle("/app/", http.StripPrefix("/app/", apiConf.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
 
