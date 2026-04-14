@@ -3,11 +3,21 @@ package main
 import _ "github.com/lib/pq"
 
 import (
+	"github.com/joho/godotenv"
+	"github.com/Adfmu1/http_servers/internal/database"
+	"database/sql"
 	"net/http"
+	"os"
 )
 
 
 func main() {
+	godotenv.Load()
+	// import db
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	dbQueries := database.New(db)
+
 	// create a multiplexer for a server
 	mux := http.NewServeMux()
 	// create server that uses created mux
