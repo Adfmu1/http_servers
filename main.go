@@ -15,18 +15,22 @@ import (
 type apiConfig struct {
 	fileserverHits atomic.Int32
 	Database	   *database.Queries
+	Platform		string
 }
+
+var apiConf apiConfig
 
 func main() {
 	godotenv.Load()
 	// import db
 	dbURL := os.Getenv("DB_URL")
-	db, err := sql.Open("postgres", dbURL)
+	platform := os.Getenv("PLATFORM")
+	dbConn, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		fmt.Println("an error occured while opening database")
 		return
 	}
-	dbQueries := database.New(db)
+	dbQueries := database.New(dbConn)
 
 	// create a multiplexer for a server
 	mux := http.NewServeMux()
@@ -35,13 +39,15 @@ func main() {
 		Addr:		":8080",
 		Handler:	mux,
 	}
-	apiConf := &apiConfig{}
 	apiConf.Database = dbQueries
+	apiConf.Platform = platform
+
 	// add basic handler at a root
 	mux.Handle("/app/", http.StripPrefix("/app/", apiConf.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
 
 	mux.HandleFunc("GET /api/healthz", handleReadinessEndpoint)
 	mux.HandleFunc("POST /api/validate_chirp", handlePostChirps)
+	mux.HandleFunc("POST /api/users", handleRegisterUser)
 
 	mux.HandleFunc("GET /admin/metrics", apiConf.handleMetricsEndpoint)
 	mux.HandleFunc("POST /admin/reset", apiConf.handleResetEndpoint)
