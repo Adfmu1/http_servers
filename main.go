@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"sync/atomic"
 	"encoding/json"
+	"strings"
+	"slices"
 	"fmt"
 )
-
 
 // struct to hold number of requests to the server
 type apiConfig struct {
@@ -50,6 +51,7 @@ func handlePostChirps(rw http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
+	params.Body = filterProfaneWords(params.Body)
 
 	// ======== CHECK REQUEST DATA ========
 	// any error occurs
@@ -66,10 +68,10 @@ func handlePostChirps(rw http.ResponseWriter, req *http.Request) {
 	}
 	// response ok
 	type response struct {
-		Body	bool	`json:"valid"`
+		Body	string	`json:"cleaned_body"`
 	}
 	resp := response{
-		Body:	true,
+		Body:	params.Body,
 	}
 	respondWithJson(rw, 200, resp)
 }
@@ -128,3 +130,19 @@ func respondWithJson(rw http.ResponseWriter, code int, payload interface{}) {
 	rw.Write(data)
 }
 
+func filterProfaneWords(chirp string) string {
+	// banned words
+	profaneWords := []string{"kerfuffle", "sharbert", "fornax"}
+
+	words := strings.Split(chirp, " ")
+	wordsFiltered := make([]string, len(words))
+	copy(wordsFiltered, words)
+
+	for i := 0; i < len(words); i++ {
+		if slices.Contains(profaneWords, strings.ToLower(words[i])) {
+			wordsFiltered[i] = "****"
+		}
+	}
+
+	return strings.Join(wordsFiltered, " ")
+}
