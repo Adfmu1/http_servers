@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"log"
 )
 
 func handleRegisterUser(rw http.ResponseWriter, req *http.Request) {
@@ -24,7 +23,6 @@ func handleRegisterUser(rw http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		const errMsg = "Couldnt create user"
-		log.Printf("DEBUG: CreateUser failed with error: %v", err)
 		respondWithError(rw, 500, errMsg)
 		return
 	}
