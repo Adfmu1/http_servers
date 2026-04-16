@@ -1,18 +1,20 @@
 package main
 
 import (
+	"github.com/Adfmu1/http_servers/internal/database"
 	"encoding/json"
 	"net/http"
+	"github.com/google/uuid"
 )
 
 func handlePostChirps(rw http.ResponseWriter, req *http.Request) {
 	type parameters struct {
-		Body	string	`json:"body"`
+		Body	string		`json:"body"`
+		UserID	uuid.UUID	`json:"user_id"`
 	}
 	decoder := json.NewDecoder(req.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
-	params.Body = filterProfaneWords(params.Body)
 
 	// ======== CHECK REQUEST DATA ========
 	// any error occurs
@@ -27,12 +29,19 @@ func handlePostChirps(rw http.ResponseWriter, req *http.Request) {
 		respondWithError(rw, 400, errMsg)
 		return
 	}
-	// response ok
-	type response struct {
-		Body	string	`json:"cleaned_body"`
+	params.Body = filterProfaneWords(params.Body)
+	// request ok
+	chirp, err := apiConf.Database.PostChirp(
+		req.Context(), database.PostChirpParams{
+			Body: params.Body,
+			UserID: params.UserID,
+		})
+
+	if err != nil {
+		const errMsg = "Something went wrong while creating Chirp"
+		respondWithError(rw, 500, errMsg)
+		return
 	}
-	resp := response{
-		Body:	params.Body,
-	}
-	respondWithJson(rw, 200, resp)
+
+	respondWithJson(rw, 201, chirp)
 }
