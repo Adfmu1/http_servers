@@ -46,6 +46,7 @@ func main() {
 	mux.Handle("/app/", http.StripPrefix("/app/", apiConf.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
 
 	mux.HandleFunc("GET /api/healthz", handleReadinessEndpoint)
+	mux.HandleFunc("GET /api/chirps", handleGetChirps)
 	mux.HandleFunc("POST /api/chirps", handlePostChirps)
 	mux.HandleFunc("POST /api/users", handleRegisterUser)
 
