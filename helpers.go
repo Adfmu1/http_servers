@@ -1,11 +1,21 @@
 package main
 
 import (
+	"github.com/Adfmu1/http_servers/internal/database"
+	"github.com/google/uuid"
+	"time"
 	"encoding/json"
 	"net/http"
 	"strings"
 	"slices"
 )
+
+type UserNoPass struct {
+    ID        uuid.UUID     `json:"id"`
+    CreatedAt time.Time     `json:"created_at"`
+    UpdatedAt time.Time     `json:"updated_at"`
+    Email     string        `json:"email"`
+}
 
 func respondWithError(rw http.ResponseWriter, code int, msg string) {
 	type errorStruct struct {
@@ -45,4 +55,13 @@ func filterProfaneWords(chirp string) string {
 	}
 
 	return strings.Join(wordsFiltered, " ")
+}
+
+func removePasswordFromUser(usr database.User) UserNoPass {
+	return UserNoPass{
+		ID: usr.ID,
+		CreatedAt: usr.CreatedAt,
+		UpdatedAt: usr.UpdatedAt,
+		Email: usr.Email,
+	}
 }
