@@ -1,16 +1,15 @@
 package main
 
 import (
-	"encoding/json"
+	"github.com/Adfmu1/http_servers/internal/database"
+	"github.com/Adfmu1/http_servers/internal/auth"
+	"encoding/json"	
 	"net/http"
 )
 
 func handleRegisterUser(rw http.ResponseWriter, req *http.Request) {
-	type parameters struct {
-		Email	string	`json:"email"`
-	}
 	decoder := json.NewDecoder(req.Body)
-	params := parameters{}
+	params := database.CreateUserParams{}
 	err := decoder.Decode(&params)
 
 	if err != nil {
@@ -19,7 +18,15 @@ func handleRegisterUser(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	resp, err := apiConf.Database.CreateUser(req.Context(), params.Email)
+	params.HashedPassword, err = auth.HashPassword(params.HashedPassword)
+
+	if err != nil {
+		const errMsg = "Couldnt hash user password"
+		respondWithError(rw, 500, errMsg)
+		return
+	}
+
+	resp, err := apiConf.Database.CreateUser(req.Context(), params)
 
 	if err != nil {
 		const errMsg = "Couldnt create user"
@@ -27,5 +34,5 @@ func handleRegisterUser(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	respondWithJson(rw, 201, resp)
+	respondWithJson(rw, 201, removePasswordFromUser(resp))
 }
