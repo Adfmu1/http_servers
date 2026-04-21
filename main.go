@@ -16,6 +16,7 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	Database	   *database.Queries
 	Platform		string
+	SecretKey		string
 }
 
 var apiConf apiConfig
@@ -25,12 +26,17 @@ func main() {
 	// import db
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
+	secret := os.Getenv("SECRET")
 	dbConn, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		fmt.Println("an error occured while opening database")
 		return
 	}
 	dbQueries := database.New(dbConn)
+
+	apiConf.Database = dbQueries
+	apiConf.Platform = platform
+	apiConf.SecretKey = secret
 
 	// create a multiplexer for a server
 	mux := http.NewServeMux()
@@ -39,8 +45,6 @@ func main() {
 		Addr:		":8080",
 		Handler:	mux,
 	}
-	apiConf.Database = dbQueries
-	apiConf.Platform = platform
 
 	// add basic handler at a root
 	mux.Handle("/app/", http.StripPrefix("/app/", apiConf.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
