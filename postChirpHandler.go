@@ -2,27 +2,42 @@ package main
 
 import (
 	"github.com/Adfmu1/http_servers/internal/database"
+	"github.com/Adfmu1/http_servers/internal/auth"
 	"encoding/json"
 	"net/http"
-	"github.com/google/uuid"
 )
 
 func handlePostChirps(rw http.ResponseWriter, req *http.Request) {
 	type parameters struct {
 		Body	string		`json:"body"`
-		UserID	uuid.UUID	`json:"user_id"`
 	}
 	decoder := json.NewDecoder(req.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
 
-	// ======== CHECK REQUEST DATA ========
-	// any error occurs
 	if err != nil {
-		const errMsg = "Something went wrong"
-		respondWithError(rw, 500, errMsg)
+		const errMsg = "Wrong request body"
+		respondWithError(rw, 400, errMsg)
 		return
 	}
+
+	usrToken, err := auth.GetBearerToken(req.Header)
+
+	if err != nil {
+		const errMsg = "Invalid JWT token"
+		respondWithError(rw, 401, errMsg)
+		return
+	}
+
+	id, err := auth.ValidateJWT(usrToken, apiConf.SecretKey)
+
+	if err != nil {
+		const errMsg = "Invalid JWT token"
+		respondWithError(rw, 401, errMsg)
+		return
+	}
+	
+	// ======== CHECK REQUEST DATA ========
 	// length of chirp too long
 	if len(params.Body) > 140 {
 		const errMsg = "Chirp is too long"
@@ -34,7 +49,7 @@ func handlePostChirps(rw http.ResponseWriter, req *http.Request) {
 	chirp, err := apiConf.Database.PostChirp(
 		req.Context(), database.PostChirpParams{
 			Body: params.Body,
-			UserID: params.UserID,
+			UserID: id,
 		})
 
 	if err != nil {
