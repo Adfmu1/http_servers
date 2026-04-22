@@ -7,7 +7,7 @@ import (
 )
 
 func GetBearerToken(headers http.Header) (string, error) {
-	partsHeader := strings.Split(headers.Get("Authorization"), " ")
+	partsHeader := strings.Fields(headers.Get("Authorization"))
 
 	if len(partsHeader) != 2 || partsHeader[0] != "Bearer" {
 		return "", errors.New("malformed authorization header")
