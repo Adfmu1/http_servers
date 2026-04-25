@@ -3,10 +3,12 @@ package main
 import (
 	"github.com/google/uuid"
 	"net/http"
+	"sort"
 )
 
 func handleGetChirps(rw http.ResponseWriter, req *http.Request) {
 	query := req.URL.Query().Get("author_id")
+	sortType := req.URL.Query().Get("sort")
 
 	if query != "" {
 		usrId, err := uuid.Parse(query)
@@ -25,6 +27,10 @@ func handleGetChirps(rw http.ResponseWriter, req *http.Request) {
 			return
 		}
 
+		if sortType == "desc" {
+			sort.Slice(chirps, func(i, j int) bool {return chirps[i].CreatedAt.After(chirps[j].CreatedAt)} )
+		}
+
 		respondWithJson(rw, 200, chirps)
 		return
 	}
@@ -35,6 +41,10 @@ func handleGetChirps(rw http.ResponseWriter, req *http.Request) {
 		const errMsg = "Something went wrong"
 		respondWithError(rw, 500, errMsg)
 		return
+	}
+
+	if sortType == "desc" {
+		sort.Slice(chirps, func(i, j int) bool {return chirps[i].CreatedAt.After(chirps[j].CreatedAt)} )
 	}
 
 	respondWithJson(rw, 200, chirps)
