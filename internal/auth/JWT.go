@@ -68,9 +68,5 @@ func GetBearerToken(headers http.Header) (string, error) {
 		return "", errors.New("malformed authorization header")
 	}
 
-	if len(partsHeader[1]) == 0 {
-		return "", errors.New("No token in the request")
-	}
-
 	return partsHeader[1], nil
 }
