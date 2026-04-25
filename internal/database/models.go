@@ -25,6 +25,7 @@ type User struct {
     UpdatedAt time.Time     `json:"updated_at"`
     Email     string        `json:"email"`
 	HashedPassword string   `json:"password"`
+	IsChirpyRed    bool		`json:"is_chirpy_red"`
 }
 
 type RefreshToken struct {
