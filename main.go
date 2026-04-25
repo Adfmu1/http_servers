@@ -17,6 +17,7 @@ type apiConfig struct {
 	Database	   *database.Queries
 	Platform		string
 	SecretKey		string
+	PolkaKey		string
 }
 
 var apiConf apiConfig
@@ -27,6 +28,7 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
 	secret := os.Getenv("SECRET")
+	polka_key := os.Getenv("POLKA_KEY")
 	dbConn, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		fmt.Println("an error occured while opening database")
@@ -37,6 +39,7 @@ func main() {
 	apiConf.Database = dbQueries
 	apiConf.Platform = platform
 	apiConf.SecretKey = secret
+	apiConf.PolkaKey = polka_key
 
 	// create a multiplexer for a server
 	mux := http.NewServeMux()
