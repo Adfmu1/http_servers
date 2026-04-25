@@ -71,6 +71,7 @@ func handleLoginUser (rw http.ResponseWriter, req *http.Request) {
 		Email     		string        	`json:"email"`
 		Token			string			`json:"token"`
 		RefreshToken	string			`json:"refresh_token"`
+		IsChirpyRed		bool			`json:"is_chirpy_red"`
 	}
 
 	respUsr := respStruct{
@@ -80,6 +81,7 @@ func handleLoginUser (rw http.ResponseWriter, req *http.Request) {
 		Email: dbUsr.Email,
 		Token: token,
 		RefreshToken: refreshToken,
+		IsChirpyRed: dbUsr.IsChirpyRed,
 	}
 
 	respondWithJson(rw, 200, respUsr)
